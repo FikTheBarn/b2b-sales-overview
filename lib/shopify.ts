@@ -68,7 +68,7 @@ export async function getRecentOrders() {
     `;
 
     const response = await fetch(
-      `https://${SHOPIFY_SHOP}.myshopify.com/admin/api/API_VERSION/graphql.json`,
+      `https://${SHOPIFY_SHOP}.myshopify.com/admin/api/2026-07/graphql.json`,
       {
         method: "POST",
         headers: {
