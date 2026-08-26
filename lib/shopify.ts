@@ -122,4 +122,19 @@ export async function getRecentOrders() {
     return data.data.orders.nodes
     
 }
+
+function weightToKg (value: number, unit: string) {
+    if (unit === "GRAMS") {
+       const gramsToKg = value / 1000;
+        return gramsToKg; 
+    }
+    else if (unit === "KILOGRAMS") {
+       const kgToKg = value
+       return kgToKg;
+    }
+
+};
+
+
+
     
