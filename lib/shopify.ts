@@ -27,6 +27,39 @@ export async function getShopifyAccessToken() {
   return data.access_token;
 }
 
+export async function getShopName(){
+   const token = await getShopifyAccessToken();
+    const query = `
+      {
+        shop {
+          name
+        }
+      }
+    `;
+
+    const response = await fetch (
+      `https://${SHOPIFY_SHOP}.myshopify.com/admin/api/2026-07/graphql.json`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type":"application/json",
+          "X-Shopify-Access-Token": token,
+        },
+         body: JSON.stringify({query}),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Shopify shop request failed: ${error}`);
+    }
+
+    const data = await response.json();
+
+    return data.data.shop.name;
+  
+}
+
 export async function getRecentOrders() {
   const token = await getShopifyAccessToken();
     const query = `
@@ -84,6 +117,9 @@ export async function getRecentOrders() {
       throw new Error(`Shopify orders request failed: ${error}`);
     }
 
-    return response.json();
+    const data = await response.json();
+
+    return data.data.orders.nodes
+    
 }
     

@@ -1,14 +1,19 @@
 import { NextResponse } from "next/server";
-import { getShopifyAccessToken } from "@/lib/shopify";
+import { getShopifyAccessToken, getShopName, getRecentOrders } from "@/lib/shopify";
 
 export async function GET() {
   try {
     const token = await getShopifyAccessToken();
+     const shopName = await getShopName();
+     const orders = await getRecentOrders();
 
     return NextResponse.json({
       success: true,
       message: "Successfully authenticated with Shopify",
       tokenReceived: Boolean(token),
+      shopName,
+      orders,
+
     });
   } catch (error) {
     console.error(error);
@@ -21,4 +26,5 @@ export async function GET() {
       { status: 500 }
     );
   }
+ 
 }
