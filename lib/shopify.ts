@@ -15,21 +15,21 @@ export async function getShopifyAccessToken() {
         client_id: SHOPIFY_CLIENT_ID,
         client_secret: SHOPIFY_CLIENT_SECRET,
       }),
-    }
+    },
   );
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Shopify authentication failed: ${error}`);
-    }
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Shopify authentication failed: ${error}`);
+  }
 
   const data = await response.json();
 
   return data.access_token;
 }
 
-export async function getShopName(){
-   const token = await getShopifyAccessToken();
-    const query = `
+export async function getShopName() {
+  const token = await getShopifyAccessToken();
+  const query = `
       {
         shop {
           name
@@ -37,32 +37,31 @@ export async function getShopName(){
       }
     `;
 
-    const response = await fetch (
-      `https://${SHOPIFY_SHOP}.myshopify.com/admin/api/2026-07/graphql.json`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type":"application/json",
-          "X-Shopify-Access-Token": token,
-        },
-         body: JSON.stringify({query}),
-      }
-    );
+  const response = await fetch(
+    `https://${SHOPIFY_SHOP}.myshopify.com/admin/api/2026-07/graphql.json`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": token,
+      },
+      body: JSON.stringify({ query }),
+    },
+  );
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Shopify shop request failed: ${error}`);
-    }
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Shopify shop request failed: ${error}`);
+  }
 
-    const data = await response.json();
+  const data = await response.json();
 
-    return data.data.shop.name;
-  
+  return data.data.shop.name;
 }
 
 export async function getRecentOrders() {
   const token = await getShopifyAccessToken();
-    const query = `
+  const query = `
       {
         orders(first: 2, reverse: true) {
           nodes {
@@ -100,41 +99,24 @@ export async function getRecentOrders() {
       }
     `;
 
-    const response = await fetch(
-      `https://${SHOPIFY_SHOP}.myshopify.com/admin/api/2026-07/graphql.json`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Shopify-Access-Token": token,
-        },
-        body: JSON.stringify({ query }),
-      }
-    );
+  const response = await fetch(
+    `https://${SHOPIFY_SHOP}.myshopify.com/admin/api/2026-07/graphql.json`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Shopify-Access-Token": token,
+      },
+      body: JSON.stringify({ query }),
+    },
+  );
 
-    if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`Shopify orders request failed: ${error}`);
-    }
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(`Shopify orders request failed: ${error}`);
+  }
 
-    const data = await response.json();
+  const data = await response.json();
 
-    return data.data.orders.nodes
-    
+  return data.data.orders.nodes;
 }
-
-function weightToKg (value: number, unit: string) {
-    if (unit === "GRAMS") {
-       const gramsToKg = value / 1000;
-        return gramsToKg; 
-    }
-    else if (unit === "KILOGRAMS") {
-       const kgToKg = value
-       return kgToKg;
-    }
-
-};
-
-
-
-    
