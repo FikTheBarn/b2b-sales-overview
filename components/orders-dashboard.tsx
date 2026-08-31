@@ -182,6 +182,8 @@ export default function OrdersDashboard({
     ),
   };
   const entlastungSummary = buildEntlastungSummary(orders);
+  const entlastungTotalWeightKg =
+    entlastungSummary.DE + entlastungSummary.EU + entlastungSummary.WORLD_WIDE;
   const filteredRevenueByCurrency = new Map<string, number>();
 
   for (const order of filteredOrders) {
@@ -306,8 +308,8 @@ export default function OrdersDashboard({
               </h1>
               <p className="text-sm leading-6 text-slate-600">
                 The app stays request-driven, keeps data in memory only, and now
-                includes a separate Entlastungstabelle view based on legacy
-                coffee weight.
+                includes a separate Entlastungstabelle view based on coffee
+                weight.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[32rem]">
@@ -581,7 +583,13 @@ export default function OrdersDashboard({
 
         {data && activeTab === "entlastung" ? (
           <>
-            <section className="grid gap-4 md:grid-cols-3">
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-sm text-slate-500">Total</p>
+                <p className="mt-3 text-3xl font-semibold text-slate-950">
+                  {formatWeightKg(entlastungTotalWeightKg)}
+                </p>
+              </article>
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="text-sm text-slate-500">DE — Germany</p>
                 <p className="mt-3 text-3xl font-semibold text-slate-950">
@@ -623,6 +631,14 @@ export default function OrdersDashboard({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
+                    <tr className="text-slate-700">
+                      <td className="px-4 py-4 font-semibold text-slate-950">
+                        Total
+                      </td>
+                      <td className="px-4 py-4">
+                        {formatWeightKg(entlastungTotalWeightKg)}
+                      </td>
+                    </tr>
                     <tr className="text-slate-700">
                       <td className="px-4 py-4 font-semibold text-slate-950">
                         DE/Germany
