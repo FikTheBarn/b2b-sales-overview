@@ -357,7 +357,7 @@ export default function OrdersDashboard({
 
         {data ? (
           <>
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="text-sm text-slate-500">Orders</p>
                 <p className="mt-3 text-3xl font-semibold text-slate-950">
@@ -508,9 +508,17 @@ export default function OrdersDashboard({
                           { key: "customer", label: "Customer" },
                           { key: "country", label: "Country" },
                           { key: "totalRevenue", label: "Revenue" },
+                          {
+                            /* 
                           { key: "standardWeightKg", label: "Standard" },
+                          */
+                          },
                           { key: "legacyWeightKg", label: "Weight" },
+                          {
+                            /* 
                           { key: "differenceKg", label: "Delta" },
+                          */
+                          },
                         ].map((column) => (
                           <th
                             key={column.key}
@@ -554,12 +562,15 @@ export default function OrdersDashboard({
                               order.currencyCode,
                             )}
                           </td>
+                          {/*
                           <td className="px-4 py-4">
                             {formatWeightKg(order.standardWeightKg)}
                           </td>
+                          */}
                           <td className="px-4 py-4">
                             {formatWeightKg(order.legacyWeightKg)}
                           </td>
+                          {/*
                           <td
                             className={`px-4 py-4 font-medium ${
                               order.differenceKg === 0
@@ -570,6 +581,7 @@ export default function OrdersDashboard({
                             }`}>
                             {formatWeightKg(order.differenceKg)}
                           </td>
+                           */}
                           <td className="max-w-xs px-4 py-4 text-slate-500">
                             {getItemPreview(order)}
                           </td>
