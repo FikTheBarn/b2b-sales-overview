@@ -508,17 +508,7 @@ export default function OrdersDashboard({
                           { key: "customer", label: "Customer" },
                           { key: "country", label: "Country" },
                           { key: "totalRevenue", label: "Revenue" },
-                          {
-                            /* 
-                          { key: "standardWeightKg", label: "Standard" },
-                          */
-                          },
                           { key: "legacyWeightKg", label: "Weight" },
-                          {
-                            /* 
-                          { key: "differenceKg", label: "Delta" },
-                          */
-                          },
                         ].map((column) => (
                           <th
                             key={column.key}
