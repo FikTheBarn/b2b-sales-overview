@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# B2B Sales Overview
 
-## Getting Started
+Request-driven Shopify sales dashboard built with Next.js. The app fetches orders on demand for a selected date range, preserves the existing Shopify authentication flow, and compares the current structured weight calculation against the legacy Shopify Flow-compatible calculation.
 
-First, run the development server:
+## Environment
+
+Set these values in `.env.local`:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+SHOPIFY_SHOP=your-shop-subdomain
+SHOPIFY_CLIENT_ID=your-client-id
+SHOPIFY_CLIENT_SECRET=your-client-secret
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Local Run
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Install dependencies if needed, then start the app:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:3000](http://localhost:3000).
 
-To learn more about Next.js, take a look at the following resources:
+## What The App Does
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- Uses native date inputs and a `Load Orders` action instead of background syncing or storage.
+- Calls `/api/orders?startDate=YYYY-MM-DD&endDate=YYYY-MM-DD`.
+- Validates the requested date range and returns controlled `400` errors for bad input.
+- Fetches Shopify orders with cursor pagination.
+- Fetches additional line-item pages per order when Shopify truncates the nested line-item connection.
+- Returns normalized order data with company, customer, country, revenue, both weight calculations, and line-item detail.
+- Filters results in the browser by company, customer, country, and text search.
+- Supports table sorting for the main order fields.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Verification
 
-## Deploy on Vercel
+These checks should pass:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run lint
+npx tsc --noEmit --incremental false
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Example API Requests
+
+Successful request:
+
+```bash
+curl "http://localhost:3000/api/orders?startDate=2026-08-01&endDate=2026-08-31"
+```
+
+Validation error example:
+
+```bash
+curl "http://localhost:3000/api/orders?startDate=2026-08-31"
+```
+
+## Current Limitations
+
+- The dashboard only keeps data in memory for the current browser session.
+- Revenue is summarized by currency; mixed-currency ranges are shown as separate totals instead of one combined figure.
+- Filtering happens on the returned dataset in the browser. There is no server-side persistence, webhook sync, or Postgres layer yet.

@@ -17,6 +17,7 @@ export async function GET() {
       tokenReceived: Boolean(token),
       shopName,
       orders,
+      recentOrderCount: orders.length,
     });
   } catch (error) {
     console.error(error);
