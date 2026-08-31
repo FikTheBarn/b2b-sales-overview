@@ -333,8 +333,7 @@ export default function OrdersDashboard({
                 type="button"
                 onClick={loadOrders}
                 disabled={isLoading || !startDate || !endDate}
-                className="h-11 self-end rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-              >
+                className="h-11 self-end rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400">
                 {isLoading ? "Loading..." : "Load Orders"}
               </button>
             </div>
@@ -348,8 +347,7 @@ export default function OrdersDashboard({
                 activeTab === "sales"
                   ? "bg-slate-950 text-white"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
+              }`}>
               Sales Overview
             </button>
             <button
@@ -359,8 +357,7 @@ export default function OrdersDashboard({
                 activeTab === "entlastung"
                   ? "bg-slate-950 text-white"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-              }`}
-            >
+              }`}>
               Entlastungstabelle
             </button>
           </div>
@@ -409,8 +406,7 @@ export default function OrdersDashboard({
                     filteredCurrencyBreakdown.map((entry) => (
                       <p
                         key={entry.currencyCode}
-                        className="text-sm font-medium text-slate-950"
-                      >
+                        className="text-sm font-medium text-slate-950">
                         {formatCurrency(entry.totalRevenue, entry.currencyCode)}
                       </p>
                     ))
@@ -446,8 +442,7 @@ export default function OrdersDashboard({
                     onChange={(event) =>
                       updateFilter("company", event.target.value)
                     }
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                  >
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200">
                     <option value="">All companies</option>
                     {companyOptions.map((company) => (
                       <option key={company} value={company}>
@@ -464,8 +459,7 @@ export default function OrdersDashboard({
                       updateFilter("customer", event.target.value)
                     }
                     className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                    disabled={customerOptions.length === 0}
-                  >
+                    disabled={customerOptions.length === 0}>
                     <option value="">
                       {customerOptions.length === 0
                         ? "No customers found"
@@ -485,8 +479,7 @@ export default function OrdersDashboard({
                     onChange={(event) =>
                       updateFilter("country", event.target.value)
                     }
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                  >
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200">
                     <option value="">All countries</option>
                     {countryOptions.map((country) => (
                       <option key={country} value={country}>
@@ -530,13 +523,11 @@ export default function OrdersDashboard({
                         ].map((column) => (
                           <th
                             key={column.key}
-                            className="px-4 py-3 font-semibold"
-                          >
+                            className="px-4 py-3 font-semibold">
                             <button
                               type="button"
                               onClick={() => toggleSort(column.key as SortKey)}
-                              className="inline-flex items-center gap-1 transition hover:text-slate-900"
-                            >
+                              className="inline-flex items-center gap-1 transition hover:text-slate-900">
                               {column.label}
                               {sort.key === column.key ? (
                                 <span>
@@ -592,30 +583,25 @@ export default function OrdersDashboard({
           <>
             <section className="grid gap-4 md:grid-cols-3">
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-sm text-slate-500">DE</p>
+                <p className="text-sm text-slate-500">DE — Germany</p>
                 <p className="mt-3 text-3xl font-semibold text-slate-950">
                   {formatWeightKg(entlastungSummary.DE)}
                 </p>
-                <p className="mt-2 text-sm text-slate-500">
-                  Germany orders only
-                </p>
               </article>
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-sm text-slate-500">EU</p>
+                <p className="text-sm text-slate-500">
+                  EU — European Union excluding Germany
+                </p>
                 <p className="mt-3 text-3xl font-semibold text-slate-950">
                   {formatWeightKg(entlastungSummary.EU)}
                 </p>
-                <p className="mt-2 text-sm text-slate-500">
-                  EU orders excluding Germany
-                </p>
               </article>
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-sm text-slate-500">World Wide</p>
+                <p className="text-sm text-slate-500">
+                  World Wide — Non-EU countries
+                </p>
                 <p className="mt-3 text-3xl font-semibold text-slate-950">
                   {formatWeightKg(entlastungSummary.WORLD_WIDE)}
-                </p>
-                <p className="mt-2 text-sm text-slate-500">
-                  Non-EU orders outside Germany
                 </p>
               </article>
             </section>
@@ -625,43 +611,37 @@ export default function OrdersDashboard({
                 Entlastungstabelle
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-600">
-                This dashboard sums total coffee kilograms from the selected
-                date range using the legacy coffee weight calculation only.
+                This dashboard sums total coffee kilograms for the
+                Entlastungstabelle custom orders from Sufio are not included.
               </p>
               <div className="mt-6 overflow-x-auto">
                 <table className="min-w-full divide-y divide-slate-200 text-sm">
                   <thead className="bg-slate-50">
                     <tr className="text-left text-slate-500">
-                      <th className="px-4 py-3 font-semibold">Bucket</th>
-                      <th className="px-4 py-3 font-semibold">Definition</th>
+                      <th className="px-4 py-3 font-semibold">Region</th>
                       <th className="px-4 py-3 font-semibold">Coffee kg</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
                     <tr className="text-slate-700">
                       <td className="px-4 py-4 font-semibold text-slate-950">
-                        DE
+                        DE/Germany
                       </td>
-                      <td className="px-4 py-4">Germany</td>
                       <td className="px-4 py-4">
                         {formatWeightKg(entlastungSummary.DE)}
                       </td>
                     </tr>
                     <tr className="text-slate-700">
                       <td className="px-4 py-4 font-semibold text-slate-950">
-                        EU
+                        EU countries excluding Germany
                       </td>
-                      <td className="px-4 py-4">EU countries excluding Germany</td>
                       <td className="px-4 py-4">
                         {formatWeightKg(entlastungSummary.EU)}
                       </td>
                     </tr>
                     <tr className="text-slate-700">
                       <td className="px-4 py-4 font-semibold text-slate-950">
-                        World Wide
-                      </td>
-                      <td className="px-4 py-4">
-                        Countries outside the EU and Germany
+                        World Wide: Countries outside the EU and Germany
                       </td>
                       <td className="px-4 py-4">
                         {formatWeightKg(entlastungSummary.WORLD_WIDE)}
