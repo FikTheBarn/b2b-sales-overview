@@ -82,7 +82,8 @@ function compareOrders(
   switch (sort.key) {
     case "createdAt":
       return (
-        (new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime()) *
+        (new Date(left.createdAt).getTime() -
+          new Date(right.createdAt).getTime()) *
         direction
       );
     case "totalRevenue":
@@ -122,9 +123,7 @@ function matchesSearch(order: NormalizedOrder, query: string) {
     ]),
   ];
 
-  return searchableValues.some((value) =>
-    value?.toLowerCase().includes(query),
-  );
+  return searchableValues.some((value) => value?.toLowerCase().includes(query));
 }
 
 export default function OrdersDashboard({
@@ -196,11 +195,14 @@ export default function OrdersDashboard({
   for (const order of filteredOrders) {
     filteredRevenueByCurrency.set(
       order.currencyCode,
-      (filteredRevenueByCurrency.get(order.currencyCode) ?? 0) + order.totalRevenue,
+      (filteredRevenueByCurrency.get(order.currencyCode) ?? 0) +
+        order.totalRevenue,
     );
   }
 
-  const filteredCurrencyBreakdown = Array.from(filteredRevenueByCurrency.entries())
+  const filteredCurrencyBreakdown = Array.from(
+    filteredRevenueByCurrency.entries(),
+  )
     .map(([currencyCode, totalRevenue]) => ({
       currencyCode,
       totalRevenue,
@@ -215,7 +217,9 @@ export default function OrdersDashboard({
       const response = await fetch(
         `/api/orders?startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`,
       );
-      const result = (await response.json()) as OrdersApiSuccess | OrdersApiError;
+      const result = (await response.json()) as
+        | OrdersApiSuccess
+        | OrdersApiError;
 
       if (!response.ok) {
         throw new Error(
@@ -228,17 +232,25 @@ export default function OrdersDashboard({
       }
 
       if ("error" in result) {
-        throw new Error(result.details ? `${result.error} ${result.details}` : result.error);
+        throw new Error(
+          result.details ? `${result.error} ${result.details}` : result.error,
+        );
       }
 
       const nextCompanyOptions = Array.from(
-        new Set(result.orders.map((order) => order.company).filter(isNonEmptyString)),
+        new Set(
+          result.orders.map((order) => order.company).filter(isNonEmptyString),
+        ),
       ).sort((left, right) => left.localeCompare(right));
       const nextCustomerOptions = Array.from(
-        new Set(result.orders.map((order) => order.customer).filter(isNonEmptyString)),
+        new Set(
+          result.orders.map((order) => order.customer).filter(isNonEmptyString),
+        ),
       ).sort((left, right) => left.localeCompare(right));
       const nextCountryOptions = Array.from(
-        new Set(result.orders.map((order) => order.country).filter(isNonEmptyString)),
+        new Set(
+          result.orders.map((order) => order.country).filter(isNonEmptyString),
+        ),
       ).sort((left, right) => left.localeCompare(right));
 
       setData(result);
@@ -259,14 +271,19 @@ export default function OrdersDashboard({
       setData(null);
       setHasLoaded(true);
       setError(
-        loadError instanceof Error ? loadError.message : "Failed to load orders.",
+        loadError instanceof Error
+          ? loadError.message
+          : "Failed to load orders.",
       );
     } finally {
       setIsLoading(false);
     }
   }
 
-  function updateFilter<Key extends keyof Filters>(key: Key, value: Filters[Key]) {
+  function updateFilter<Key extends keyof Filters>(
+    key: Key,
+    value: Filters[Key],
+  ) {
     setFilters((currentFilters) => ({
       ...currentFilters,
       [key]: value,
@@ -293,10 +310,13 @@ export default function OrdersDashboard({
                 B2B Sales Overview
               </p>
               <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
-                Request Shopify orders by date range and review revenue plus weight deltas.
+                Request Shopify orders by date range and review revenue plus
+                order weight.
               </h1>
               <p className="text-sm leading-6 text-slate-600">
-                This version stays request-driven. It fetches directly from Shopify, preserves both weight calculations, and keeps the data in memory only.
+                This version stays request-driven. It fetches directly from
+                Shopify, preserves both weight calculations, and keeps the data
+                in memory only.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[32rem]">
@@ -322,8 +342,7 @@ export default function OrdersDashboard({
                 type="button"
                 onClick={loadOrders}
                 disabled={isLoading || !startDate || !endDate}
-                className="h-11 self-end rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
-              >
+                className="h-11 self-end rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400">
                 {isLoading ? "Loading..." : "Load Orders"}
               </button>
             </div>
@@ -361,14 +380,14 @@ export default function OrdersDashboard({
                     filteredCurrencyBreakdown.map((entry) => (
                       <p
                         key={entry.currencyCode}
-                        className="text-sm font-medium text-slate-950"
-                      >
+                        className="text-sm font-medium text-slate-950">
                         {formatCurrency(entry.totalRevenue, entry.currencyCode)}
                       </p>
                     ))
                   )}
                 </div>
               </article>
+              {/* 
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="text-sm text-slate-500">Standard weight</p>
                 <p className="mt-3 text-3xl font-semibold text-slate-950">
@@ -384,11 +403,11 @@ export default function OrdersDashboard({
                       : filteredSummary.totalDifferenceKg > 0
                         ? "text-amber-700"
                         : "text-emerald-700"
-                  }`}
-                >
+                  }`}>
                   {formatWeightKg(filteredSummary.totalDifferenceKg)}
                 </p>
               </article>
+               */}
             </section>
 
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -398,7 +417,9 @@ export default function OrdersDashboard({
                   <input
                     type="search"
                     value={filters.search}
-                    onChange={(event) => updateFilter("search", event.target.value)}
+                    onChange={(event) =>
+                      updateFilter("search", event.target.value)
+                    }
                     placeholder="Order number, company, customer, SKU, product..."
                     className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
                   />
@@ -407,9 +428,10 @@ export default function OrdersDashboard({
                   <span>Company</span>
                   <select
                     value={filters.company}
-                    onChange={(event) => updateFilter("company", event.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                  >
+                    onChange={(event) =>
+                      updateFilter("company", event.target.value)
+                    }
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200">
                     <option value="">All companies</option>
                     {companyOptions.map((company) => (
                       <option key={company} value={company}>
@@ -422,12 +444,15 @@ export default function OrdersDashboard({
                   <span>Customer</span>
                   <select
                     value={filters.customer}
-                    onChange={(event) => updateFilter("customer", event.target.value)}
+                    onChange={(event) =>
+                      updateFilter("customer", event.target.value)
+                    }
                     className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                    disabled={customerOptions.length === 0}
-                  >
+                    disabled={customerOptions.length === 0}>
                     <option value="">
-                      {customerOptions.length === 0 ? "No customers found" : "All customers"}
+                      {customerOptions.length === 0
+                        ? "No customers found"
+                        : "All customers"}
                     </option>
                     {customerOptions.map((customer) => (
                       <option key={customer} value={customer}>
@@ -440,9 +465,10 @@ export default function OrdersDashboard({
                   <span>Country</span>
                   <select
                     value={filters.country}
-                    onChange={(event) => updateFilter("country", event.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                  >
+                    onChange={(event) =>
+                      updateFilter("country", event.target.value)
+                    }
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200">
                     <option value="">All countries</option>
                     {countryOptions.map((country) => (
                       <option key={country} value={country}>
@@ -457,7 +483,9 @@ export default function OrdersDashboard({
             <section className="rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-950">Orders</h2>
+                  <h2 className="text-lg font-semibold text-slate-950">
+                    Orders
+                  </h2>
                   <p className="text-sm text-slate-500">
                     {filteredOrders.length} of {orders.length} shown
                   </p>
@@ -481,18 +509,21 @@ export default function OrdersDashboard({
                           { key: "country", label: "Country" },
                           { key: "totalRevenue", label: "Revenue" },
                           { key: "standardWeightKg", label: "Standard" },
-                          { key: "legacyWeightKg", label: "Legacy" },
+                          { key: "legacyWeightKg", label: "Weight" },
                           { key: "differenceKg", label: "Delta" },
                         ].map((column) => (
-                          <th key={column.key} className="px-4 py-3 font-semibold">
+                          <th
+                            key={column.key}
+                            className="px-4 py-3 font-semibold">
                             <button
                               type="button"
                               onClick={() => toggleSort(column.key as SortKey)}
-                              className="inline-flex items-center gap-1 transition hover:text-slate-900"
-                            >
+                              className="inline-flex items-center gap-1 transition hover:text-slate-900">
                               {column.label}
                               {sort.key === column.key ? (
-                                <span>{sort.direction === "desc" ? "↓" : "↑"}</span>
+                                <span>
+                                  {sort.direction === "desc" ? "↓" : "↑"}
+                                </span>
                               ) : null}
                             </button>
                           </th>
@@ -504,15 +535,24 @@ export default function OrdersDashboard({
                       {filteredOrders.map((order) => (
                         <tr key={order.id} className="align-top text-slate-700">
                           <td className="px-4 py-4">
-                            <div className="font-semibold text-slate-950">{order.name}</div>
-                            <div className="text-xs text-slate-500">{order.id}</div>
+                            <div className="font-semibold text-slate-950">
+                              {order.name}
+                            </div>
+                            <div className="text-xs text-slate-500">
+                              {order.id}
+                            </div>
                           </td>
-                          <td className="px-4 py-4">{formatDate(order.createdAt)}</td>
+                          <td className="px-4 py-4">
+                            {formatDate(order.createdAt)}
+                          </td>
                           <td className="px-4 py-4">{order.company ?? "—"}</td>
                           <td className="px-4 py-4">{order.customer ?? "—"}</td>
                           <td className="px-4 py-4">{order.country ?? "—"}</td>
                           <td className="px-4 py-4">
-                            {formatCurrency(order.totalRevenue, order.currencyCode)}
+                            {formatCurrency(
+                              order.totalRevenue,
+                              order.currencyCode,
+                            )}
                           </td>
                           <td className="px-4 py-4">
                             {formatWeightKg(order.standardWeightKg)}
@@ -527,8 +567,7 @@ export default function OrdersDashboard({
                                 : order.differenceKg > 0
                                   ? "text-amber-700"
                                   : "text-emerald-700"
-                            }`}
-                          >
+                            }`}>
                             {formatWeightKg(order.differenceKg)}
                           </td>
                           <td className="max-w-xs px-4 py-4 text-slate-500">
