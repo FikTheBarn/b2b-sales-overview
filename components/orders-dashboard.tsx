@@ -2,6 +2,7 @@
 
 import { useDeferredValue, useState } from "react";
 
+import { buildEntlastungSummary } from "@/lib/entlastung";
 import type {
   NormalizedOrder,
   OrdersApiError,
@@ -15,11 +16,10 @@ type SortKey =
   | "customer"
   | "country"
   | "totalRevenue"
-  | "standardWeightKg"
-  | "legacyWeightKg"
-  | "differenceKg";
+  | "legacyWeightKg";
 
 type SortDirection = "asc" | "desc";
+type DashboardTab = "sales" | "entlastung";
 
 type SortState = {
   key: SortKey;
@@ -87,9 +87,7 @@ function compareOrders(
         direction
       );
     case "totalRevenue":
-    case "standardWeightKg":
     case "legacyWeightKg":
-    case "differenceKg":
       return (left[sort.key] - right[sort.key]) * direction;
     case "name":
     case "company":
@@ -133,6 +131,7 @@ export default function OrdersDashboard({
   initialStartDate: string;
   initialEndDate: string;
 }) {
+  const [activeTab, setActiveTab] = useState<DashboardTab>("sales");
   const [startDate, setStartDate] = useState(initialStartDate);
   const [endDate, setEndDate] = useState(initialEndDate);
   const [data, setData] = useState<OrdersApiSuccess | null>(null);
@@ -175,21 +174,14 @@ export default function OrdersDashboard({
     .filter((order) => matchesSearch(order, deferredSearch))
     .sort((left, right) => compareOrders(left, right, sort));
 
-  const filteredSummary = {
+  const salesSummary = {
     orderCount: filteredOrders.length,
-    totalStandardWeightKg: filteredOrders.reduce(
-      (sum, order) => sum + order.standardWeightKg,
-      0,
-    ),
     totalLegacyWeightKg: filteredOrders.reduce(
       (sum, order) => sum + order.legacyWeightKg,
       0,
     ),
-    totalDifferenceKg: filteredOrders.reduce(
-      (sum, order) => sum + order.differenceKg,
-      0,
-    ),
   };
+  const entlastungSummary = buildEntlastungSummary(orders);
   const filteredRevenueByCurrency = new Map<string, number>();
 
   for (const order of filteredOrders) {
@@ -310,13 +302,12 @@ export default function OrdersDashboard({
                 B2B Sales Overview
               </p>
               <h1 className="text-3xl font-semibold tracking-tight text-slate-950">
-                Request Shopify orders by date range and review revenue plus
-                order weight.
+                Request Shopify orders by date range and review coffee weight.
               </h1>
               <p className="text-sm leading-6 text-slate-600">
-                This version stays request-driven. It fetches directly from
-                Shopify, preserves both weight calculations, and keeps the data
-                in memory only.
+                The app stays request-driven, keeps data in memory only, and now
+                includes a separate Entlastungstabelle view based on legacy
+                coffee weight.
               </p>
             </div>
             <div className="grid gap-3 sm:grid-cols-3 lg:min-w-[32rem]">
@@ -342,10 +333,36 @@ export default function OrdersDashboard({
                 type="button"
                 onClick={loadOrders}
                 disabled={isLoading || !startDate || !endDate}
-                className="h-11 self-end rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400">
+                className="h-11 self-end rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+              >
                 {isLoading ? "Loading..." : "Load Orders"}
               </button>
             </div>
+          </div>
+
+          <div className="mt-6 flex flex-wrap gap-2 border-t border-slate-200 pt-4">
+            <button
+              type="button"
+              onClick={() => setActiveTab("sales")}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                activeTab === "sales"
+                  ? "bg-slate-950 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              Sales Overview
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("entlastung")}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                activeTab === "entlastung"
+                  ? "bg-slate-950 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}
+            >
+              Entlastungstabelle
+            </button>
           </div>
         </section>
 
@@ -355,13 +372,25 @@ export default function OrdersDashboard({
           </section>
         ) : null}
 
-        {data ? (
+        {!data && hasLoaded ? (
+          <section className="rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-sm">
+            No orders were returned for the selected date range.
+          </section>
+        ) : null}
+
+        {!data && !hasLoaded ? (
+          <section className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-sm">
+            Choose a date range, then load the orders from Shopify.
+          </section>
+        ) : null}
+
+        {data && activeTab === "sales" ? (
           <>
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
+            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="text-sm text-slate-500">Orders</p>
                 <p className="mt-3 text-3xl font-semibold text-slate-950">
-                  {filteredSummary.orderCount}
+                  {salesSummary.orderCount}
                 </p>
               </article>
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -380,34 +409,20 @@ export default function OrdersDashboard({
                     filteredCurrencyBreakdown.map((entry) => (
                       <p
                         key={entry.currencyCode}
-                        className="text-sm font-medium text-slate-950">
+                        className="text-sm font-medium text-slate-950"
+                      >
                         {formatCurrency(entry.totalRevenue, entry.currencyCode)}
                       </p>
                     ))
                   )}
                 </div>
               </article>
-              {/* 
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-sm text-slate-500">Standard weight</p>
+                <p className="text-sm text-slate-500">Weight</p>
                 <p className="mt-3 text-3xl font-semibold text-slate-950">
-                  {formatWeightKg(filteredSummary.totalStandardWeightKg)}
+                  {formatWeightKg(salesSummary.totalLegacyWeightKg)}
                 </p>
               </article>
-              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-sm text-slate-500">Legacy delta</p>
-                <p
-                  className={`mt-3 text-3xl font-semibold ${
-                    filteredSummary.totalDifferenceKg === 0
-                      ? "text-slate-950"
-                      : filteredSummary.totalDifferenceKg > 0
-                        ? "text-amber-700"
-                        : "text-emerald-700"
-                  }`}>
-                  {formatWeightKg(filteredSummary.totalDifferenceKg)}
-                </p>
-              </article>
-               */}
             </section>
 
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -431,7 +446,8 @@ export default function OrdersDashboard({
                     onChange={(event) =>
                       updateFilter("company", event.target.value)
                     }
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200">
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                  >
                     <option value="">All companies</option>
                     {companyOptions.map((company) => (
                       <option key={company} value={company}>
@@ -448,7 +464,8 @@ export default function OrdersDashboard({
                       updateFilter("customer", event.target.value)
                     }
                     className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-                    disabled={customerOptions.length === 0}>
+                    disabled={customerOptions.length === 0}
+                  >
                     <option value="">
                       {customerOptions.length === 0
                         ? "No customers found"
@@ -468,7 +485,8 @@ export default function OrdersDashboard({
                     onChange={(event) =>
                       updateFilter("country", event.target.value)
                     }
-                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200">
+                    className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+                  >
                     <option value="">All countries</option>
                     {countryOptions.map((country) => (
                       <option key={country} value={country}>
@@ -512,11 +530,13 @@ export default function OrdersDashboard({
                         ].map((column) => (
                           <th
                             key={column.key}
-                            className="px-4 py-3 font-semibold">
+                            className="px-4 py-3 font-semibold"
+                          >
                             <button
                               type="button"
                               onClick={() => toggleSort(column.key as SortKey)}
-                              className="inline-flex items-center gap-1 transition hover:text-slate-900">
+                              className="inline-flex items-center gap-1 transition hover:text-slate-900"
+                            >
                               {column.label}
                               {sort.key === column.key ? (
                                 <span>
@@ -552,26 +572,9 @@ export default function OrdersDashboard({
                               order.currencyCode,
                             )}
                           </td>
-                          {/*
-                          <td className="px-4 py-4">
-                            {formatWeightKg(order.standardWeightKg)}
-                          </td>
-                          */}
                           <td className="px-4 py-4">
                             {formatWeightKg(order.legacyWeightKg)}
                           </td>
-                          {/*
-                          <td
-                            className={`px-4 py-4 font-medium ${
-                              order.differenceKg === 0
-                                ? "text-slate-700"
-                                : order.differenceKg > 0
-                                  ? "text-amber-700"
-                                  : "text-emerald-700"
-                            }`}>
-                            {formatWeightKg(order.differenceKg)}
-                          </td>
-                           */}
                           <td className="max-w-xs px-4 py-4 text-slate-500">
                             {getItemPreview(order)}
                           </td>
@@ -583,15 +586,93 @@ export default function OrdersDashboard({
               )}
             </section>
           </>
-        ) : hasLoaded ? (
-          <section className="rounded-3xl border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-sm">
-            No orders were returned for the selected date range.
-          </section>
-        ) : (
-          <section className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center text-sm text-slate-500 shadow-sm">
-            Choose a date range, then load the orders from Shopify.
-          </section>
-        )}
+        ) : null}
+
+        {data && activeTab === "entlastung" ? (
+          <>
+            <section className="grid gap-4 md:grid-cols-3">
+              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-sm text-slate-500">DE</p>
+                <p className="mt-3 text-3xl font-semibold text-slate-950">
+                  {formatWeightKg(entlastungSummary.DE)}
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Germany orders only
+                </p>
+              </article>
+              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-sm text-slate-500">EU</p>
+                <p className="mt-3 text-3xl font-semibold text-slate-950">
+                  {formatWeightKg(entlastungSummary.EU)}
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  EU orders excluding Germany
+                </p>
+              </article>
+              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-sm text-slate-500">World Wide</p>
+                <p className="mt-3 text-3xl font-semibold text-slate-950">
+                  {formatWeightKg(entlastungSummary.WORLD_WIDE)}
+                </p>
+                <p className="mt-2 text-sm text-slate-500">
+                  Non-EU orders outside Germany
+                </p>
+              </article>
+            </section>
+
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-950">
+                Entlastungstabelle
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                This dashboard sums total coffee kilograms from the selected
+                date range using the legacy coffee weight calculation only.
+              </p>
+              <div className="mt-6 overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50">
+                    <tr className="text-left text-slate-500">
+                      <th className="px-4 py-3 font-semibold">Bucket</th>
+                      <th className="px-4 py-3 font-semibold">Definition</th>
+                      <th className="px-4 py-3 font-semibold">Coffee kg</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    <tr className="text-slate-700">
+                      <td className="px-4 py-4 font-semibold text-slate-950">
+                        DE
+                      </td>
+                      <td className="px-4 py-4">Germany</td>
+                      <td className="px-4 py-4">
+                        {formatWeightKg(entlastungSummary.DE)}
+                      </td>
+                    </tr>
+                    <tr className="text-slate-700">
+                      <td className="px-4 py-4 font-semibold text-slate-950">
+                        EU
+                      </td>
+                      <td className="px-4 py-4">EU countries excluding Germany</td>
+                      <td className="px-4 py-4">
+                        {formatWeightKg(entlastungSummary.EU)}
+                      </td>
+                    </tr>
+                    <tr className="text-slate-700">
+                      <td className="px-4 py-4 font-semibold text-slate-950">
+                        World Wide
+                      </td>
+                      <td className="px-4 py-4">
+                        Countries outside the EU and Germany
+                      </td>
+                      <td className="px-4 py-4">
+                        {formatWeightKg(entlastungSummary.WORLD_WIDE)}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </>
+        ) : null}
       </main>
     </div>
   );

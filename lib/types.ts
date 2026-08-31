@@ -100,6 +100,10 @@ export type NormalizedOrder = {
   lineItems: NormalizedLineItem[];
 };
 
+export type EntlastungBucket = "DE" | "EU" | "WORLD_WIDE";
+
+export type EntlastungSummary = Record<EntlastungBucket, number>;
+
 export type OrdersApiSuccess = {
   orders: NormalizedOrder[];
   summary: {
