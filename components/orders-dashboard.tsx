@@ -183,7 +183,7 @@ export default function OrdersDashboard({
   };
   const entlastungSummary = buildEntlastungSummary(orders);
   const entlastungTotalWeightKg =
-    entlastungSummary.DE + entlastungSummary.EU + entlastungSummary.WORLD_WIDE;
+    entlastungSummary.EU + entlastungSummary.WORLD_WIDE;
   const filteredRevenueByCurrency = new Map<string, number>();
 
   for (const order of filteredOrders) {
@@ -633,14 +633,6 @@ export default function OrdersDashboard({
                   <tbody className="divide-y divide-slate-200">
                     <tr className="text-slate-700">
                       <td className="px-4 py-4 font-semibold text-slate-950">
-                        Total
-                      </td>
-                      <td className="px-4 py-4">
-                        {formatWeightKg(entlastungTotalWeightKg)}
-                      </td>
-                    </tr>
-                    <tr className="text-slate-700">
-                      <td className="px-4 py-4 font-semibold text-slate-950">
                         DE/Germany
                       </td>
                       <td className="px-4 py-4">
@@ -661,6 +653,16 @@ export default function OrdersDashboard({
                       </td>
                       <td className="px-4 py-4">
                         {formatWeightKg(entlastungSummary.WORLD_WIDE)}
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tbody className="divide-y divide-slate-200">
+                    <tr className="text-slate-700">
+                      <td className="px-4 py-4 font-semibold text-slate-950">
+                        Entlastungstabelle Total
+                      </td>
+                      <td className="px-4 py-4">
+                        {formatWeightKg(entlastungTotalWeightKg)}
                       </td>
                     </tr>
                   </tbody>
