@@ -583,13 +583,7 @@ export default function OrdersDashboard({
 
         {data && activeTab === "entlastung" ? (
           <>
-            <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <p className="text-sm text-slate-500">Total</p>
-                <p className="mt-3 text-3xl font-semibold text-slate-950">
-                  {formatWeightKg(entlastungTotalWeightKg)}
-                </p>
-              </article>
+            <section className="grid gap-4 md:grid-cols-3">
               <article className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <p className="text-sm text-slate-500">DE — Germany</p>
                 <p className="mt-3 text-3xl font-semibold text-slate-950">
@@ -613,7 +607,16 @@ export default function OrdersDashboard({
                 </p>
               </article>
             </section>
-
+            <section className="grid gap-4 md:grid-cols-3">
+              <article className="rounded-2xl border border-slate-300 bg-slate-50 p-5 shadow-sm md:col-span-2-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <p className="text-sm font-medium text-slate-600">
+                  Entlastung Total
+                </p>
+                <p className="mt-4 text-3xl font-semibold text-slate-950">
+                  {formatWeightKg(entlastungTotalWeightKg)}
+                </p>
+              </article>
+            </section>
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
               <h2 className="text-lg font-semibold text-slate-950">
                 Entlastungstabelle
