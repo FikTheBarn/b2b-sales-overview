@@ -1,8 +1,13 @@
 "use client";
 
 import { useDeferredValue, useState } from "react";
+import { createColumnHelper, tableFeatures } from "@tanstack/react-table";
 
 import { buildEntlastungSummary } from "@/lib/entlastung";
+import {
+  buildWeeklyCustomerRows,
+  type WeeklyCustomerRow,
+} from "@/lib/weekly-customer-matrix";
 import type {
   NormalizedOrder,
   OrdersApiError,
@@ -19,7 +24,7 @@ type SortKey =
   | "legacyWeightKg";
 
 type SortDirection = "asc" | "desc";
-type DashboardTab = "sales" | "entlastung";
+type DashboardTab = "sales" | "entlastung" | "weekly";
 
 type SortState = {
   key: SortKey;
@@ -32,6 +37,24 @@ type Filters = {
   customer: string;
   search: string;
 };
+
+const weeklyMatrixFeatures = tableFeatures({});
+const weeklyMatrixColumnHelper = createColumnHelper<
+  typeof weeklyMatrixFeatures,
+  WeeklyCustomerRow
+>();
+
+const weeklyMatrixBaseColumns = weeklyMatrixColumnHelper.columns([
+  weeklyMatrixColumnHelper.accessor("company", {
+    header: "Company",
+  }),
+  weeklyMatrixColumnHelper.accessor("country", {
+    header: "Country",
+  }),
+  weeklyMatrixColumnHelper.accessor("totalLegacyWeightKg", {
+    header: "Total Weight (kg)",
+  }),
+]);
 
 const dateFormatter = new Intl.DateTimeFormat("en-GB", {
   day: "2-digit",
@@ -57,6 +80,10 @@ function formatCurrency(value: number, currencyCode: string) {
     currency: currencyCode,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+function isSingleCalendarYear(startDate: string, endDate: string) {
+  return startDate.slice(0, 4) === endDate.slice(0, 4);
 }
 
 function getItemPreview(order: NormalizedOrder) {
@@ -151,6 +178,9 @@ export default function OrdersDashboard({
   const deferredSearch = useDeferredValue(filters.search.trim().toLowerCase());
 
   const orders = data?.orders ?? [];
+  const isSingleYear = isSingleCalendarYear(startDate, endDate);
+  const weeklyMatrixYear = startDate.slice(0, 4);
+  const weeklyCustomerRows = buildWeeklyCustomerRows(orders);
   const companyOptions = Array.from(
     new Set(orders.map((order) => order.company).filter(isNonEmptyString)),
   ).sort((left, right) => left.localeCompare(right));
@@ -361,6 +391,16 @@ export default function OrdersDashboard({
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
               }`}>
               Entlastungstabelle
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("weekly")}
+              className={`rounded-full px-4 py-2 text-sm font-medium transition ${
+                activeTab === "weekly"
+                  ? "bg-slate-950 text-white"
+                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+              }`}>
+              Weekly Overview
             </button>
           </div>
         </section>
