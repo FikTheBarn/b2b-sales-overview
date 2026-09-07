@@ -1,4 +1,4 @@
-import type { NormalizedOrder, getw } from "./types";
+import type { NormalizedOrder } from "./types";
 
 export type WeeklyCustomerRow = {
   company: string;
@@ -7,7 +7,12 @@ export type WeeklyCustomerRow = {
   weeklyWeights: Record<number, number>;
 };
 
-function getIsoWeekNumber(dateValue: string) {
+export type WeeklyMonthGroup = {
+  month: string;
+  colSpan: number;
+};
+
+export function getIsoWeekNumber(dateValue: string) {
   const date = new Date(dateValue);
   const utcDate = new Date(
     Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()),

@@ -1,11 +1,16 @@
 "use client";
 
 import { useDeferredValue, useState } from "react";
-import { createColumnHelper, tableFeatures } from "@tanstack/react-table";
+import {
+  createColumnHelper,
+  tableFeatures,
+  useTable,
+} from "@tanstack/react-table";
 
 import { buildEntlastungSummary } from "@/lib/entlastung";
 import {
   buildWeeklyCustomerRows,
+  getIsoWeeksInYear,
   type WeeklyCustomerRow,
 } from "@/lib/weekly-customer-matrix";
 import type {
@@ -53,6 +58,7 @@ const weeklyMatrixBaseColumns = weeklyMatrixColumnHelper.columns([
   }),
   weeklyMatrixColumnHelper.accessor("totalLegacyWeightKg", {
     header: "Total Weight (kg)",
+    cell: (info) => formatWeightKg(info.getValue()),
   }),
 ]);
 
@@ -72,6 +78,10 @@ function formatDate(value: string) {
 
 function formatWeightKg(value: number) {
   return `${value.toFixed(2)} kg`;
+}
+
+function formatWeeklyWeight(value: number) {
+  return value > 0 ? `${value.toFixed(2)}` : "";
 }
 
 function formatCurrency(value: number, currencyCode: string) {
@@ -180,7 +190,30 @@ export default function OrdersDashboard({
   const orders = data?.orders ?? [];
   const isSingleYear = isSingleCalendarYear(startDate, endDate);
   const weeklyMatrixYear = startDate.slice(0, 4);
+  const weeklyMatrixCount = getIsoWeeksInYear(Number(weeklyMatrixYear));
+  const weeklyMatrixWeekNumbers = Array.from(
+    { length: weeklyMatrixCount },
+    (_, i) => i + 1,
+  );
+  const weeklyMatrixColumns = weeklyMatrixColumnHelper.columns([
+    ...weeklyMatrixBaseColumns,
+    ...weeklyMatrixWeekNumbers.map((weekNumber) =>
+      weeklyMatrixColumnHelper.accessor(
+        (row) => row.weeklyWeights[weekNumber] ?? 0,
+        {
+          id: `week-${weekNumber}`,
+          header: `Week ${weekNumber}`,
+          cell: (info) => formatWeeklyWeight(info.getValue()),
+        },
+      ),
+    ),
+  ]);
   const weeklyCustomerRows = buildWeeklyCustomerRows(orders);
+  const weeklyMatrixTable = useTable({
+    features: weeklyMatrixFeatures,
+    columns: weeklyMatrixColumns,
+    data: weeklyCustomerRows,
+  });
   const companyOptions = Array.from(
     new Set(orders.map((order) => order.company).filter(isNonEmptyString)),
   ).sort((left, right) => left.localeCompare(right));
@@ -713,6 +746,64 @@ export default function OrdersDashboard({
               </div>
             </section>
           </>
+        ) : null}
+
+        {data && activeTab === "weekly" ? (
+          !isSingleYear ? (
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-950">
+                Weekly Customer Matrix
+              </h2>
+              <p className="text-sm text-rose-700">
+                Choose a date range within one calendar year to view the weekly
+                matrix.
+              </p>
+            </section>
+          ) : (
+            <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+              <h2 className="text-lg font-semibold text-slate-950">
+                Weekly Customer Matrix — {weeklyMatrixYear}
+              </h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">
+                This dashboard shows the total coffee kilograms per customer —{" "}
+                {weeklyCustomerRows.length} customers with orders in{" "}
+                {weeklyMatrixYear}.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-slate-200">
+                  <thead className="bg-slate-100">
+                    {weeklyMatrixTable.getHeaderGroups().map((headerGroup) => (
+                      <tr key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => (
+                          <th
+                            key={header.id}
+                            colSpan={header.colSpan}
+                            className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                            {header.isPlaceholder ? null : (
+                              <weeklyMatrixTable.FlexRender header={header} />
+                            )}
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
+                  </thead>
+                  <tbody className="bg-white divide-y divide-slate-200">
+                    {weeklyMatrixTable.getRowModel().rows.map((row) => (
+                      <tr key={row.id} className="text-slate-700">
+                        {row.getAllCells().map((cell) => (
+                          <td
+                            key={cell.id}
+                            className="px-4 py-4 whitespace-nowrap text-sm text-slate-700">
+                            <weeklyMatrixTable.FlexRender cell={cell} />
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )
         ) : null}
       </main>
     </div>
