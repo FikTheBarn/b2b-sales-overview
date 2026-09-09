@@ -33,6 +33,44 @@ export function getIsoWeeksInYear(year: number) {
   return getIsoWeekNumber(lastIsoWeekDate);
 }
 
+function getIsoWeekStartDate(year: number, weekNumber: number) {
+  const januaryFourth = new Date(Date.UTC(year, 0, 4));
+  const isoDay = januaryFourth.getUTCDay() || 7;
+
+  januaryFourth.setUTCDate(januaryFourth.getUTCDate() - isoDay + 1);
+  januaryFourth.setUTCDate(
+    januaryFourth.getUTCDate() + (weekNumber - 1) * 7,
+  );
+
+  return januaryFourth;
+}
+
+const monthFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "long",
+  timeZone: "UTC",
+});
+
+export function buildWeeklyMonthGroups(year: number): WeeklyMonthGroup[] {
+  const groups: WeeklyMonthGroup[] = [];
+
+  for (let weekNumber = 1; weekNumber <= getIsoWeeksInYear(year); weekNumber += 1) {
+    const weekAnchor = getIsoWeekStartDate(year, weekNumber);
+
+    // ISO weeks belong to the year containing their Thursday.
+    weekAnchor.setUTCDate(weekAnchor.getUTCDate() + 3);
+    const month = monthFormatter.format(weekAnchor);
+    const currentGroup = groups.at(-1);
+
+    if (currentGroup?.month === month) {
+      currentGroup.colSpan += 1;
+    } else {
+      groups.push({ month, colSpan: 1 });
+    }
+  }
+
+  return groups;
+}
+
 export function buildWeeklyCustomerRows(
   orders: NormalizedOrder[],
 ): WeeklyCustomerRow[] {

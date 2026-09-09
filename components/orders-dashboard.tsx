@@ -9,9 +9,11 @@ import {
 
 import { buildEntlastungSummary } from "@/lib/entlastung";
 import {
+  buildWeeklyMonthGroups,
   buildWeeklyCustomerRows,
   getIsoWeeksInYear,
   type WeeklyCustomerRow,
+  type WeeklyMonthGroup,
 } from "@/lib/weekly-customer-matrix";
 import type {
   NormalizedOrder,
@@ -84,6 +86,49 @@ function formatWeeklyWeight(value: number) {
   return value > 0 ? `${value.toFixed(2)}` : "";
 }
 
+function escapeCsvValue(value: string | number) {
+  const stringValue = String(value);
+
+  return /[",\n\r]/.test(stringValue)
+    ? `"${stringValue.replaceAll('"', '""')}"`
+    : stringValue;
+}
+
+function buildWeeklyMatrixCsv(
+  rows: WeeklyCustomerRow[],
+  weekNumbers: number[],
+  monthGroups: WeeklyMonthGroup[],
+) {
+  const monthHeader = [
+    "Company",
+    "Country",
+    "Total Weight (kg)",
+    ...monthGroups.flatMap((group) => [
+      group.month,
+      ...Array.from({ length: group.colSpan - 1 }, () => ""),
+    ]),
+  ];
+  const weekHeader = [
+    "Company",
+    "Country",
+    "Total Weight (kg)",
+    ...weekNumbers.map((weekNumber) => `Week ${weekNumber}`),
+  ];
+  const orderRows = rows.map((row) => [
+    row.company,
+    row.country,
+    row.totalLegacyWeightKg.toFixed(2),
+    ...weekNumbers.map((weekNumber) => {
+      const weight = row.weeklyWeights[weekNumber] ?? 0;
+      return weight > 0 ? weight.toFixed(2) : "";
+    }),
+  ]);
+
+  return [monthHeader, weekHeader, ...orderRows]
+    .map((row) => row.map(escapeCsvValue).join(","))
+    .join("\r\n");
+}
+
 function formatCurrency(value: number, currencyCode: string) {
   return new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -94,6 +139,22 @@ function formatCurrency(value: number, currencyCode: string) {
 
 function isSingleCalendarYear(startDate: string, endDate: string) {
   return startDate.slice(0, 4) === endDate.slice(0, 4);
+}
+
+function getWeeklyMatrixColumnClasses(columnId: string, isHeader: boolean) {
+  const background = isHeader ? "bg-slate-100" : "bg-white";
+  const layer = isHeader ? "z-20" : "z-10";
+
+  switch (columnId) {
+    case "company":
+      return `sticky left-0 ${layer} w-80 min-w-80 max-w-80 ${background} text-left`;
+    case "country":
+      return `sticky left-80 ${layer} w-40 min-w-40 max-w-40 ${background} text-left`;
+    case "totalLegacyWeightKg":
+      return `sticky left-[30rem] ${layer} w-40 min-w-40 max-w-40 ${background} text-right`;
+    default:
+      return "w-20 min-w-20 text-right";
+  }
 }
 
 function getItemPreview(order: NormalizedOrder) {
@@ -194,6 +255,9 @@ export default function OrdersDashboard({
   const weeklyMatrixWeekNumbers = Array.from(
     { length: weeklyMatrixCount },
     (_, i) => i + 1,
+  );
+  const weeklyMatrixMonthGroups = buildWeeklyMonthGroups(
+    Number(weeklyMatrixYear),
   );
   const weeklyMatrixColumns = weeklyMatrixColumnHelper.columns([
     ...weeklyMatrixBaseColumns,
@@ -355,6 +419,22 @@ export default function OrdersDashboard({
           ? "asc"
           : "desc",
     }));
+  }
+
+  function exportWeeklyMatrixCsv() {
+    const csv = buildWeeklyMatrixCsv(
+      weeklyCustomerRows,
+      weeklyMatrixWeekNumbers,
+      weeklyMatrixMonthGroups,
+    );
+    const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `weekly-customer-matrix-${weeklyMatrixYear}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -761,24 +841,46 @@ export default function OrdersDashboard({
             </section>
           ) : (
             <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-              <h2 className="text-lg font-semibold text-slate-950">
-                Weekly Customer Matrix — {weeklyMatrixYear}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                This dashboard shows the total coffee kilograms per customer —{" "}
-                {weeklyCustomerRows.length} customers with orders in{" "}
-                {weeklyMatrixYear}.
-              </p>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-slate-200">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-950">
+                    Weekly Customer Matrix — {weeklyMatrixYear}
+                  </h2>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">
+                    This dashboard shows the total coffee kilograms per customer —{" "}
+                    {weeklyCustomerRows.length} customers with orders in{" "}
+                    {weeklyMatrixYear}.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={exportWeeklyMatrixCsv}
+                  disabled={weeklyCustomerRows.length === 0}
+                  className="shrink-0 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 disabled:cursor-not-allowed disabled:text-slate-400">
+                  Export CSV
+                </button>
+              </div>
+              <div className="mt-6 overflow-x-auto">
+                <table className="min-w-max table-fixed divide-y divide-slate-200">
                   <thead className="bg-slate-100">
+                    <tr>
+                      <th colSpan={3} className="bg-slate-100" />
+                      {weeklyMatrixMonthGroups.map((group) => (
+                        <th
+                          key={group.month}
+                          colSpan={group.colSpan}
+                          className="min-w-20 border-l border-slate-200 px-4 py-2 text-center text-xs font-semibold uppercase tracking-wider text-slate-500">
+                          {group.month}
+                        </th>
+                      ))}
+                    </tr>
                     {weeklyMatrixTable.getHeaderGroups().map((headerGroup) => (
                       <tr key={headerGroup.id}>
                         {headerGroup.headers.map((header) => (
                           <th
                             key={header.id}
                             colSpan={header.colSpan}
-                            className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
+                            className={`px-4 py-3 text-xs font-medium uppercase tracking-wider text-slate-500 ${getWeeklyMatrixColumnClasses(header.column.id, true)}`}>
                             {header.isPlaceholder ? null : (
                               <weeklyMatrixTable.FlexRender header={header} />
                             )}
@@ -793,7 +895,7 @@ export default function OrdersDashboard({
                         {row.getAllCells().map((cell) => (
                           <td
                             key={cell.id}
-                            className="px-4 py-4 whitespace-nowrap text-sm text-slate-700">
+                            className={`px-4 py-4 whitespace-nowrap text-sm text-slate-700 ${getWeeklyMatrixColumnClasses(cell.column.id, false)}`}>
                             <weeklyMatrixTable.FlexRender cell={cell} />
                           </td>
                         ))}
